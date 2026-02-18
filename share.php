@@ -1,6 +1,6 @@
 <?php
 require_once 'config.php';
-session_start();
+start_secure_session();
 // Security Headers
 header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; frame-ancestors 'none';");
 header("X-Content-Type-Options: nosniff");

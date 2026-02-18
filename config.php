@@ -20,6 +20,24 @@ function loadEnv($path) {
     }
 }
 
+// Support for HTTPS termination and real IP behind reverse proxy (Caddy/Nginx)
+if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https') {
+    $_SERVER['HTTPS'] = 'on';
+    $_SERVER['REQUEST_SCHEME'] = 'https';
+}
+if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+    $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+    $_SERVER['REMOTE_ADDR'] = trim($ips[0]);
+}
+if (isset($_SERVER['HTTP_X_FORWARDED_HOST'])) {
+    $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_X_FORWARDED_HOST'];
+}
+if (isset($_SERVER['HTTP_X_FORWARDED_PORT'])) {
+    $_SERVER['SERVER_PORT'] = $_SERVER['HTTP_X_FORWARDED_PORT'];
+} elseif (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+    $_SERVER['SERVER_PORT'] = 443;
+}
+
 loadEnv(__DIR__ . '/.env');
 
 // Database Configuration
@@ -47,7 +65,7 @@ function start_secure_session() {
             'domain' => '',
             'secure' => $secure,
             'httponly' => true,
-            'samesite' => 'Strict' // Maximum CSRF Protection
+            'samesite' => 'Lax' // Changed from Strict to Lax for better proxy compatibility
         ]);
         ini_set('session.gc_maxlifetime', $session_max_lifetime * 3600);
         session_start();
